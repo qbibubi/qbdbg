@@ -8,7 +8,6 @@
 
 - After issuing `run` command, the debugger uses `fork()` to spawn a child process.
 - Child process calls `ptrace(PTRACE_TRACEME)` to allow the parent (debugger) process to trace its execution
-- 
 
 # Features
 
