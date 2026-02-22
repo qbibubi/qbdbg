@@ -10,11 +10,12 @@
 
 int main(void) {
     dbg_t dbg;
+    dbg_init(&dbg);
 
     using_history();
     read_history(QBDBG_HISTORY);
 
-    while (1) {
+    while (dbg.running) {
         char *line = readline(QBDBG_FMT);
         if (!line) {
             break;
