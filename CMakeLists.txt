@@ -23,5 +23,6 @@ target_compile_options(qbdbg PRIVATE
     -Wpedantic
     -Wshadow
     -Wstrict-prototypes
+    -Werror=unused-result
     -g
 )
