@@ -6,8 +6,15 @@
 
 ## Architecture of the debugger
 
-- After issuing `run` command, the debugger uses `fork()` to spawn a child process.
-- Child process calls `ptrace(PTRACE_TRACEME)` to allow the parent (debugger) process to trace its execution
+The debugger is split into three layers:
+
+- `cli` layer handles user input and parsing of commands.
+- `dbg` layer handles state management of `dbg_t` context.
+- `os` layer handles `ptrace` and system calls.
+
+Data travels downwards through the layers to decouple them from responsibilities. This allows for cleaner and more maintainable style of the codebase.
+
+After issuing `run` command, the debugger uses `fork()` to spawn a child process. Child process calls `ptrace(PTRACE_TRACEME)` to allow the parent (debugger) process to trace its execution
 
 # Features
 
@@ -20,6 +27,7 @@
 # Prerequisites
 
 - Linux (requires `sys/ptrace.h` and ELF binaries)
+- GDB `readline`
 - `gcc` or `clang` compiler
 - `cmake` (3.13+)
 
