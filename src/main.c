@@ -5,11 +5,17 @@
 
 #include "cli.h"
 
+#define QBDBG_FMT       "qbdbg> "
+#define QBDBG_HISTORY   ".qbdbg_history"
+
 int main(void) {
     dbg_t dbg;
 
+    using_history();
+    read_history(QBDBG_HISTORY);
+
     while (1) {
-        char *line = readline("qbdbg> ");
+        char *line = readline(QBDBG_FMT);
         if (!line) {
             break;
         }
@@ -22,6 +28,7 @@ int main(void) {
         free(line);
     }
 
+    write_history(QBDBG_HISTORY);
     return 0;
 }
 
