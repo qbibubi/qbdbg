@@ -1,45 +1,18 @@
 #include "cli.h"
 #include "debugger.h"
 
-#include <errno.h>
+#include <assert.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-/**
- * This doesn't catch: 
- *  -   0x1 shit type addresses -> solution would be to check the values in some range OR mapped regions of the target process (/proc/<pid>/maps)
- *  -   Octal ambiguity
- */
-static int parse_address(const char* str, unsigned long* out) {
-    if (str == 0 || *str == '\0') {
-        return -1;
-    }
+#include "util.h"
 
-    char* end;
-    errno = 0;
+static void cli_set_breakpoint(dbg_t* dbg, const user_input_t* input) {
+    assert(dbg != NULL);
 
-    unsigned long address = strtoul(str, &end, 0);
-    if (errno == ERANGE) {
-        return -1;
-    }
-
-    if (end == str) {
-        return -1;
-    }
-
-    if (*end == '\0') {
-        return 0;
-    }
-
-    *out = address;
-
-    return 0;
-}
-
-static void cli_set_breakpoint(dbg_t* dbg, user_input_t* input) {
-    if (dbg == NULL || input == NULL) {
+    if (input == NULL) {
         return;
     }
 
@@ -55,15 +28,20 @@ static void cli_set_breakpoint(dbg_t* dbg, user_input_t* input) {
             continue;
         }
 
-        const int breakpoint_set = dbg_set_breakpoint(dbg, address);
-        if (breakpoint_set) {
-            return;
+        const dbg_result_t breakpoint_set = dbg_set_breakpoint(dbg, address);
+        switch (breakpoint_set) {
+            case DBG_ERR_BP_DUPLICATE:  printf("breakpoint %p already exists - skipping\n", (void*)address); break;
+            case DBG_ERR_BP_NOT_FOUND:  printf("breakpoint %p not found\n", (void*)address); break;
+            default:
+                break;
         }
     }
 }
 
-static void cli_launch(dbg_t* dbg, user_input_t* input) {
-    if (dbg == NULL || input == NULL) {
+static void cli_launch(dbg_t* dbg, const user_input_t* input) {
+    assert(dbg != NULL);
+
+    if (input == NULL) {
         return;
     }
 
@@ -71,32 +49,31 @@ static void cli_launch(dbg_t* dbg, user_input_t* input) {
         return;
     }
 
-    dbg_launch(dbg, input->argv);
+    const dbg_result_t result = dbg_launch(dbg, input->argv);
+    // handle result
 }
 
-static void cli_quit(dbg_t* dbg, user_input_t* input) { 
-    if (dbg == NULL) {
-        return;
-    }
+static void cli_quit(dbg_t* dbg, const user_input_t* input) { 
+    assert(dbg != NULL);
 
-    dbg_quit(dbg);
+    const dbg_result_t result = dbg_quit(dbg);
+    // handle result
 }
 
-static void cli_continue(dbg_t* dbg, user_input_t* input) {
-    if (dbg == NULL) {
-        return;
-    }
+static void cli_continue(dbg_t* dbg, const user_input_t* input) {
+    assert(dbg != NULL);
 
-    dbg_continue(dbg);
+    const dbg_result_t result = dbg_continue(dbg);
+    // handle result
 }
 
 // @TODO: Stepping through scopes through ptrace API 
-static void cli_step_into(dbg_t* dbg, user_input_t* input) {}
-static void cli_step_over(dbg_t* dbg, user_input_t* input) {}
-static void cli_step_out(dbg_t* dbg, user_input_t* input) {}
+static void cli_step_into(dbg_t* dbg, const user_input_t* input) {}
+static void cli_step_over(dbg_t* dbg, const user_input_t* input) {}
+static void cli_step_out(dbg_t* dbg, const user_input_t* input) {}
 
 // @TODO: Figure out what to read and how to read it during debugging
-static void cli_read(dbg_t* dbg, user_input_t* input) {}
+static void cli_read(dbg_t* dbg, const user_input_t* input) {}
 
 static command_t commands[] = {
     { "run", cli_launch },
@@ -124,7 +101,7 @@ static command_t commands[] = {
     { "step_over", cli_step_over },
 };
 
-static user_input_t parse_line(char *line) {
+NODISCARD static user_input_t parse_line(char *line) {
     size_t capacity = 4;
 
     user_input_t input = { 0 };
@@ -151,14 +128,13 @@ static user_input_t parse_line(char *line) {
 }
 
 void dispatch_command(dbg_t* dbg, char* line) {
-    user_input_t input = parse_line(line);
+    const user_input_t input = parse_line(line);
     if (input.name == NULL) {
         return;
     }
 
-    size_t commands_size = sizeof(commands) / sizeof(commands[0]);
-
-    for (size_t i = 0; i < commands_size; ++i) {
+    const unsigned long commands_size = sizeof(commands) / sizeof(commands[0]);
+    for (unsigned long i = 0; i < commands_size; ++i) {
         if (strcmp(input.name, commands[i].name) == 0) {
             commands[i].handler(dbg, &input);
             free(input.argv);

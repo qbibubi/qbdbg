@@ -10,7 +10,10 @@
 
 int main(void) {
     dbg_t dbg;
-    dbg_init(&dbg);
+    const dbg_result_t result = dbg_init(&dbg);
+    if (result != DBG_OK) {
+        return 1; 
+    }
 
     using_history();
     read_history(QBDBG_HISTORY);

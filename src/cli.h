@@ -9,7 +9,7 @@ typedef struct {
 
 typedef struct {
     const char* name;
-    void (*handler)(dbg_t* dbg, user_input_t* input);
+    void (*handler)(dbg_t* dbg, const user_input_t* input);
 } command_t;
 
 void dispatch_command(dbg_t* dbg, char* line); 

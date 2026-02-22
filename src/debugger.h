@@ -1,12 +1,15 @@
 #pragma once
 #include <sys/types.h>
 
+#include "util.h"
+
 #define MAX_BREAKPOINTS 128
 
 typedef enum {
     DBG_OK,
     
-    DBB_ERR_FORK,       // os_fork
+    DBG_ERR_PTRACE,
+    DBG_ERR_FORK,       // os_fork
     DBG_ERR_EXEC,       // os_exec
     DBG_ERR_ATTACH,     // os_attach
     DBG_ERR_WAIT,       // os_wait
@@ -57,11 +60,12 @@ typedef struct {
     int stepping_over_bp;
 } dbg_t;
 
-dbg_result_t dbg_init(dbg_t *dbg);
-dbg_result_t dbg_quit(dbg_t *dbg);
-dbg_result_t dbg_launch(dbg_t *dbg, char** argv);
-dbg_result_t dbg_continue(dbg_t *dbg);
-dbg_result_t dbg_single_step(dbg_t *dbg);
-dbg_result_t dbg_set_breakpoint(dbg_t *dbg, unsigned long addr);
-dbg_result_t dbg_remove_breakpoint(dbg_t *dbg, unsigned long addr);
+NODISCARD dbg_result_t dbg_init(dbg_t* dbg);
+NODISCARD dbg_result_t dbg_quit(dbg_t* dbg);
 
+NODISCARD dbg_result_t dbg_launch(dbg_t* dbg, char** argv);
+NODISCARD dbg_result_t dbg_continue(dbg_t* dbg);
+NODISCARD dbg_result_t dbg_single_step(dbg_t* dbg);
+
+NODISCARD dbg_result_t dbg_set_breakpoint(dbg_t* dbg, unsigned long addr);
+NODISCARD dbg_result_t dbg_remove_breakpoint(dbg_t* dbg, unsigned long addr);
