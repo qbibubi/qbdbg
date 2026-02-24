@@ -1,13 +1,33 @@
 #include "cli.h"
 #include "debugger.h"
 
-#include <assert.h>
+#include <readline/chardefs.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "util.h"
+
+static const char* dbg_result_str(dbg_result_t result) {
+    switch (result) {
+        case DBG_OK:                  return NULL; // no message on success
+        case DBG_ERR_FORK:            return "failed to fork child process";
+        case DBG_ERR_EXEC:            return "failed to execute target";
+        case DBG_ERR_WAIT:            return "failed to wait for child";
+        case DBG_ERR_ALREADY_RUNNING: return "process is already running";
+        case DBG_ERR_NOT_RUNNING:     return "no process is running";
+        case DBG_ERR_NOT_STOPPED:     return "process is not stopped";
+        case DBG_ERR_MEM_READ:        return "failed to read process memory";
+        case DBG_ERR_MEM_WRITE:       return "failed to write process memory";
+        case DBG_ERR_BP_DUPLICATE:    return "breakpoint already set at that address";
+        case DBG_ERR_BP_NOT_FOUND:    return "no breakpoint at that address";
+        case DBG_ERR_TABLE_FULL:      return "breakpoint table is full";
+        case DBG_ERR_SINGLE_STEP:     return "failed to single step";
+        case DBG_ERR_CONTINUE:        return "failed to continue execution";
+        default:                      return "unknown error";
+    }
+}
 
 static void cli_set_breakpoint(dbg_t* dbg, const user_input_t* input) {
     assert(dbg != NULL);
@@ -27,13 +47,11 @@ static void cli_set_breakpoint(dbg_t* dbg, const user_input_t* input) {
         if (address == 0UL) {
             continue;
         }
-
-        const dbg_result_t breakpoint_set = dbg_set_breakpoint(dbg, address);
-        switch (breakpoint_set) {
-            case DBG_ERR_BP_DUPLICATE:  printf("breakpoint %p already exists - skipping\n", (void*)address); break;
-            case DBG_ERR_BP_NOT_FOUND:  printf("breakpoint %p not found\n", (void*)address); break;
-            default:
-                break;
+    
+        const dbg_result_t result = dbg_set_breakpoint(dbg, address);
+        const char* message = dbg_result_str(result);
+        if (message) {
+            fprintf(stderr, "error: %s\n", message);
         }
     }
 }
@@ -41,39 +59,61 @@ static void cli_set_breakpoint(dbg_t* dbg, const user_input_t* input) {
 static void cli_launch(dbg_t* dbg, const user_input_t* input) {
     assert(dbg != NULL);
 
-    if (input == NULL) {
-        return;
-    }
-
-    if (input->argc == 0) {
+    if (input == NULL || input->argc == 0) {
         return;
     }
 
     const dbg_result_t result = dbg_launch(dbg, input->argv);
-    // handle result
+    const char* message = dbg_result_str(result);
+    if (message) {
+        fprintf(stderr, "error: %s\n", message);
+    }
 }
 
 static void cli_quit(dbg_t* dbg, const user_input_t* input) { 
     assert(dbg != NULL);
 
     const dbg_result_t result = dbg_quit(dbg);
-    // handle result
+    const char* message = dbg_result_str(result);
+    if (message) {
+        fprintf(stderr, "error: %s\n", message);
+    }
 }
 
 static void cli_continue(dbg_t* dbg, const user_input_t* input) {
     assert(dbg != NULL);
 
     const dbg_result_t result = dbg_continue(dbg);
-    // handle result
+    const char* message = dbg_result_str(result);
+    if (message) {
+        fprintf(stderr, "error: %s\n", message);
+    }
 }
 
-// @TODO: Stepping through scopes through ptrace API 
-static void cli_step_into(dbg_t* dbg, const user_input_t* input) {}
-static void cli_step_over(dbg_t* dbg, const user_input_t* input) {}
-static void cli_step_out(dbg_t* dbg, const user_input_t* input) {}
+static void cli_step_into(dbg_t* dbg, const user_input_t* input) {
+    assert(dbg != NULL);
+    
+}
 
-// @TODO: Figure out what to read and how to read it during debugging
-static void cli_read(dbg_t* dbg, const user_input_t* input) {}
+static void cli_step_over(dbg_t* dbg, const user_input_t* input) {
+    assert(dbg != NULL);
+
+    const dbg_result_t result = dbg_single_step(dbg);
+    const char* message = dbg_result_str(result);
+    if (message) {
+        fprintf(stderr, "error: %s\n", message);
+    }
+}
+
+static void cli_step_out(dbg_t* dbg, const user_input_t* input) {
+    assert(dbg != NULL);
+
+}
+
+static void cli_read(dbg_t* dbg, const user_input_t* input) {
+    assert(dbg != NULL);
+
+}
 
 static command_t commands[] = {
     { "run", cli_launch },
@@ -108,12 +148,12 @@ NODISCARD static user_input_t parse_line(char *line) {
     input.argv = malloc(capacity * sizeof(char*));
     input.argc = 0;
 
-    char* save_ptr;
-    char* token = strtok_r(line, " ", &save_ptr);
+    char* save;
+    char* token = strtok_r(line, " ", &save);
 
     input.name = token;
 
-    while ((token = strtok_r(NULL, " ", &save_ptr))) {
+    while ((token = strtok_r(NULL, " ", &save))) {
         if (input.argc + 1 >= capacity) {
             capacity *= 2;
             input.argv = realloc(input.argv, capacity * sizeof(char*));

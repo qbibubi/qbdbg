@@ -1,11 +1,8 @@
 #include "os.h"
+#include <sys/ptrace.h>
 
 os_result_t os_traceme(void) {
-    const long int ptrace_result = ptrace(PTRACE_TRACEME, 0, NULL, NULL);
-
-    // @TODO: I wonder whether compilers here will create branching and to avoid it do we use a
-    // shorthand if to skip it?
-    if (ptrace_result < 0) {
+    if (ptrace(PTRACE_TRACEME, 0, NULL, NULL) < 0) {
         return OS_ERR_PTRACE;    
     }
 
@@ -33,30 +30,62 @@ os_result_t os_detach(const pid_t pid) {
     return OS_OK;
 }
 
-os_result_t os_wait(pid_t pid, int *out_status) {
-    return OS_ERR_WAIT;
+os_result_t os_wait(const pid_t pid, int *out_status) {
+    if (waitpid(pid, out_status, 0) < 0) {
+        return OS_ERR_WAIT;
+    }
+
+    return OS_OK;
 }
 
-os_result_t os_continue(pid_t pid, int signal) {
-    return OS_ERR_CONTINUE;
+os_result_t os_continue(const pid_t pid, int signal) {
+    if (ptrace(PTRACE_CONT, pid, NULL, (void*)(long)signal) == -1) {
+        return OS_ERR_CONTINUE;
+    }
+
+    return OS_OK;
 }
 
-os_result_t os_single_step(pid_t pid) {
-    return OS_ERR_SINGLE_STEP;
+os_result_t os_single_step(const pid_t pid) {
+    if (ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL) == -1) {
+        return OS_ERR_SINGLE_STEP;
+    }
+
+    return OS_OK;
 }
 
-os_result_t os_read_mem(pid_t pid, unsigned long addr, unsigned long *out) {
-    return OS_ERR_READ_MEM;
+os_result_t os_read_mem(const pid_t pid, const unsigned long addr, unsigned long *out_data) {
+    errno = 0;
+    const long int data = ptrace(PTRACE_PEEKDATA, pid, (void*)addr, NULL);
+    if (data == -1 || errno != 0) {
+        return OS_ERR_READ_MEM;
+    }
+    
+    *out_data = (unsigned long)data;
+    
+    return OS_OK; 
 }
 
-os_result_t os_write_mem(pid_t pid, unsigned long addr, unsigned long data) {
-    return OS_ERR_WRITE_MEM;
+os_result_t os_write_mem(const pid_t pid, const unsigned long addr, const unsigned long data) {
+    if (ptrace(PTRACE_POKEDATA, pid, (void*)addr, (void*)data) == -1) {
+        return OS_ERR_WRITE_MEM;
+    }
+
+    return OS_OK;
 }
 
-os_result_t os_get_regs(pid_t pid, struct user_regs_struct *out) {
-    return OS_ERR_GET_REGS;
+os_result_t os_get_regs(pid_t pid, struct user_regs_struct *regs_out) {
+    if (ptrace(PTRACE_GETREGS, pid, NULL, regs_out) == -1) {
+        return OS_ERR_GET_REGS;
+    }
+
+    return OS_OK;
 }
 
 os_result_t os_set_regs(pid_t pid, struct user_regs_struct *regs) {
-    return OS_ERR_SET_REGS;
+    if (ptrace(PTRACE_SETREGS, pid, NULL, regs) == -1) {
+        return OS_ERR_SET_REGS;
+    }
+
+    return OS_OK;
 }

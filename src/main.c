@@ -10,8 +10,7 @@
 
 int main(void) {
     dbg_t dbg;
-    const dbg_result_t result = dbg_init(&dbg);
-    if (result != DBG_OK) {
+    if (dbg_init(&dbg) != DBG_OK) {
         return 1; 
     }
 

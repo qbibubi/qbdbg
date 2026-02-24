@@ -5,6 +5,12 @@
 
 #define MAX_BREAKPOINTS 128
 
+#if defined(__WIN32)
+#   define INTERRUPT_BYTE 0xCC
+#else
+#   define INTERRUPT_BYTE 0xCC
+#endif 
+
 typedef enum {
     DBG_OK,
     
@@ -22,6 +28,9 @@ typedef enum {
     DBG_ERR_NOT_RUNNING,
     DBG_ERR_ALREADY_RUNNING,
     DBG_ERR_NOT_STOPPED,
+
+    DBG_ERR_SINGLE_STEP,
+    DBG_ERR_CONTINUE,
 
     DBG_ERR_BP_DUPLICATE,
     DBG_ERR_BP_NOT_FOUND,
@@ -47,7 +56,7 @@ typedef struct {
 } breakpoint_t;
 
 typedef struct {
-    breakpoint_t breakpoints[MAX_BREAKPOINTS];
+    breakpoint_t table[MAX_BREAKPOINTS];
     int count;
 } breakpoint_table_t;
 
@@ -62,10 +71,9 @@ typedef struct {
 
 NODISCARD dbg_result_t dbg_init(dbg_t* dbg);
 NODISCARD dbg_result_t dbg_quit(dbg_t* dbg);
-
 NODISCARD dbg_result_t dbg_launch(dbg_t* dbg, char** argv);
 NODISCARD dbg_result_t dbg_continue(dbg_t* dbg);
 NODISCARD dbg_result_t dbg_single_step(dbg_t* dbg);
-
 NODISCARD dbg_result_t dbg_set_breakpoint(dbg_t* dbg, unsigned long addr);
 NODISCARD dbg_result_t dbg_remove_breakpoint(dbg_t* dbg, unsigned long addr);
+

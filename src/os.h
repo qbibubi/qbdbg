@@ -32,8 +32,8 @@ NODISCARD os_result_t os_wait(const pid_t pid, int* out_status);
 
 NODISCARD os_result_t os_continue(const pid_t pid, const int signal);
 NODISCARD os_result_t os_single_step(const pid_t pid);
-NODISCARD os_result_t os_read_mem(const pid_t pid, const unsigned long addr, unsigned long* out);
+NODISCARD os_result_t os_read_mem(const pid_t pid, const unsigned long addr, unsigned long* out_data);
 NODISCARD os_result_t os_write_mem(const pid_t pid, const unsigned long addr, const unsigned long data);
-NODISCARD os_result_t os_get_regs(const pid_t pid, struct user_regs_struct* out);
+NODISCARD os_result_t os_get_regs(const pid_t pid, struct user_regs_struct* out_regs);
 NODISCARD os_result_t os_set_regs(const pid_t pid, struct user_regs_struct* regs);
 
