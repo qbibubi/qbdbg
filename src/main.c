@@ -1,12 +1,5 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <readline/readline.h>
-#include <readline/history.h>
-
-#include "cli.h"
-
-#define QBDBG_FMT       "qbdbg> "
-#define QBDBG_HISTORY   ".qbdbg_history"
+#include "cli/cli.h"
+#include "dbg/dbg.h"
 
 int main(void) {
     dbg_t dbg;

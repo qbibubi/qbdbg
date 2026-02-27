@@ -1,14 +1,6 @@
-#pragma once
+#include "cli_breakpoint.h"
 
-#include <errno.h>
-#include <stdlib.h>
-#include <assert.h>
-
-#if defined(__GNUC__) || defined(__clang__)
-#   define NODISCARD __attribute__((warn_unused_result))
-#else
-#   define NODISCARD
-#endif
+#include "../dbg/dbg_breakpoint.h"
 
 /**
  * @brief Parses an address provided by the user in a command
@@ -24,14 +16,13 @@
  * @param out pointer to an output unsigned long address variable
  * @returns 0 on success; -1 otherwise;
  */
-NODISCARD static inline int parse_address(const char* str, unsigned long* out) {
+static int parse_address(const char* str, unsigned long* out) {
     if (str == 0 || *str == '\0') {
         return -1;
     }
 
-    char* end;
+    char* end = NULL;
     errno = 0;
-
     const unsigned long address = strtoul(str, &end, 0);
     if (errno == ERANGE) {
         return -1;
@@ -47,4 +38,32 @@ NODISCARD static inline int parse_address(const char* str, unsigned long* out) {
     }
 
     return -1;
+}
+
+void cli_set_breakpoint(dbg_t* dbg, const user_input_t* input) {
+    assert(dbg != NULL);
+    assert(input != NULL);
+    if (input->argc == 0) {
+        return;
+    }
+
+    for (int i = 0; i < input->argc; ++i) {
+        unsigned long address;
+
+        if (parse_address(input->argv[i], &address) == -1) {
+            // @TODO: check if the argument is not a function name => only then we can continue if it really is a mistake
+            // @TODO: check if an address is in the paged memory pool of the process
+            continue;
+        }
+
+        if (address == 0UL) {
+            continue;
+        }
+    
+        const dbg_result_t result = dbg_set_breakpoint(dbg, address);
+        const char* message = dbg_result_str(result);
+        if (message) {
+            fprintf(stderr, ERROR_FMT, message);
+        }
+    }
 }

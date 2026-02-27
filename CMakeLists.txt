@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-project(qbdebug VERSION 1.0 LANGUAGES C)
+project(QBDBG VERSION 1.0 LANGUAGES C)
 
 set(CMAKE_C_COMPILER clang)
 set(CMAKE_C_STANDARD 11)
@@ -8,9 +8,18 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 add_executable(qbdbg
     src/main.c
-    src/debugger.c
-    src/os.c
-    src/cli.c
+
+    src/os/os.c
+
+    src/dbg/dbg.c
+    src/dbg/dbg_breakpoint.c
+    src/dbg/dbg_regs.c
+    src/dbg/dbg_step.c
+
+    src/cli/cli.c
+    src/cli/cli_breakpoint.c
+    src/cli/cli_regs.c
+    src/cli/cli_step.c
 )
 
 target_link_libraries(qbdbg PRIVATE

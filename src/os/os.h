@@ -1,11 +1,15 @@
 #pragma once
+
+#ifndef OS_H
+#define OS_H
+
 #include <sys/wait.h>
 #include <sys/ptrace.h>
 #include <sys/types.h>
 #include <sys/user.h>
 #include <unistd.h>
 
-#include "util.h"
+#include "../arch.h"
 
 typedef enum { 
     OS_OK,
@@ -30,10 +34,12 @@ NODISCARD os_result_t os_exec(const char* path, char* const argv[]);
 NODISCARD os_result_t os_detach(const pid_t pid);
 NODISCARD os_result_t os_wait(const pid_t pid, int* out_status);
 
-NODISCARD os_result_t os_continue(const pid_t pid, const int signal);
-NODISCARD os_result_t os_single_step(const pid_t pid);
 NODISCARD os_result_t os_read_mem(const pid_t pid, const unsigned long addr, unsigned long* out_data);
 NODISCARD os_result_t os_write_mem(const pid_t pid, const unsigned long addr, const unsigned long data);
-NODISCARD os_result_t os_get_regs(const pid_t pid, struct user_regs_struct* out_regs);
-NODISCARD os_result_t os_set_regs(const pid_t pid, struct user_regs_struct* regs);
 
+NODISCARD os_result_t os_continue(const pid_t pid, const int signal);
+NODISCARD os_result_t os_single_step(const pid_t pid);
+NODISCARD os_result_t os_get_regs(const pid_t pid, struct user_regs_struct* out_regs);
+NODISCARD os_result_t os_set_regs(const pid_t pid, const struct user_regs_struct* regs);
+
+#endif // OS_H

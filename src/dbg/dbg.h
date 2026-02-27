@@ -1,24 +1,35 @@
 #pragma once
-#include <sys/types.h>
 
-#include "util.h"
+#ifndef DBG_H
+#define DBG_H
+
+#include <sys/user.h>
+#include <errno.h>
+#include <assert.h>
+#include <stdlib.h>
+
+#include "../arch.h"
 
 #define MAX_BREAKPOINTS 128
-
-#if defined(__WIN32)
-#   define INTERRUPT_BYTE 0xCC
-#else
-#   define INTERRUPT_BYTE 0xCC
-#endif 
+#define INTERRUPT_BYTE  0xCC
 
 typedef enum {
     DBG_OK,
-    
+
     DBG_ERR_PTRACE,
-    DBG_ERR_FORK,       // os_fork
-    DBG_ERR_EXEC,       // os_exec
+    DBG_ERR_FORK,
+    DBG_ERR_EXEC,
+    DBG_ERR_DETACH,
+    DBG_ERR_WAIT,
+
+    DBG_ERR_CONTINUE,
+    DBG_ERR_SINGLE_STEP,
+    DBG_ERR_READ_MEM,
+    DBG_ERR_WRITE_MEM,
+    DBG_ERR_GET_REGS,
+    DBG_ERR_SET_REGS,
+
     DBG_ERR_ATTACH,     // os_attach
-    DBG_ERR_WAIT,       // os_wait
 
     DBG_ERR_MEM_READ,   // os_read_mem 
     DBG_ERR_MEM_WRITE,  // os_write_mem
@@ -29,9 +40,9 @@ typedef enum {
     DBG_ERR_ALREADY_RUNNING,
     DBG_ERR_NOT_STOPPED,
 
-    DBG_ERR_SINGLE_STEP,
-    DBG_ERR_CONTINUE,
-
+    /**
+     * Breakpoints
+     */
     DBG_ERR_BP_DUPLICATE,
     DBG_ERR_BP_NOT_FOUND,
     DBG_ERR_TABLE_FULL,
@@ -41,13 +52,6 @@ typedef enum {
     DBG_ERR_INVALID_ADDR,
     DBG_ERR_INVALID_ARG
 } dbg_result_t;
-
-typedef enum {
-    DBG_STOPPED,
-    DBG_RUNNING,
-    DBG_STEPPING,
-    DBG_EXITED,
-} dbg_state_t;
 
 typedef struct {
     unsigned long address;
@@ -60,7 +64,27 @@ typedef struct {
     int count;
 } breakpoint_table_t;
 
+#ifdef __x86_64
+
 typedef struct {
+    unsigned long r15, r14, r13, r12, rbp, rbx, r11, r10, r9, r8;
+    unsigned long rax, rcx, rdx, rsi, rdi;
+    unsigned long rip, rsp;
+    unsigned long cs, eflags, ss, ds, es, fs, gs;
+} dbg_regs_t;
+
+#else
+#   error ARCHITECTURE NOT SUPPORTED
+#endif // __X86_64
+
+typedef enum {
+    DBG_STOPPED,
+    DBG_RUNNING,
+    DBG_STEPPING,
+    DBG_EXITED,
+} dbg_state_t;
+
+typedef struct dbg_t {
     pid_t pid;
     dbg_state_t state;
     breakpoint_table_t breakpoints;
@@ -72,8 +96,6 @@ typedef struct {
 NODISCARD dbg_result_t dbg_init(dbg_t* dbg);
 NODISCARD dbg_result_t dbg_quit(dbg_t* dbg);
 NODISCARD dbg_result_t dbg_launch(dbg_t* dbg, char** argv);
-NODISCARD dbg_result_t dbg_continue(dbg_t* dbg);
-NODISCARD dbg_result_t dbg_single_step(dbg_t* dbg);
-NODISCARD dbg_result_t dbg_set_breakpoint(dbg_t* dbg, unsigned long addr);
-NODISCARD dbg_result_t dbg_remove_breakpoint(dbg_t* dbg, unsigned long addr);
+NODISCARD const char* dbg_result_str(dbg_result_t result);
 
+#endif // DBG_H

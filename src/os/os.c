@@ -1,5 +1,7 @@
 #include "os.h"
-#include <sys/ptrace.h>
+
+#include <errno.h>
+#include <assert.h>
 
 os_result_t os_traceme(void) {
     if (ptrace(PTRACE_TRACEME, 0, NULL, NULL) < 0) {
@@ -82,7 +84,7 @@ os_result_t os_get_regs(pid_t pid, struct user_regs_struct *regs_out) {
     return OS_OK;
 }
 
-os_result_t os_set_regs(pid_t pid, struct user_regs_struct *regs) {
+os_result_t os_set_regs(pid_t pid, const struct user_regs_struct *regs) {
     if (ptrace(PTRACE_SETREGS, pid, NULL, regs) == -1) {
         return OS_ERR_SET_REGS;
     }

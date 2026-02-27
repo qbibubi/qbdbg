@@ -10,11 +10,13 @@ The debugger is split into three layers:
 
 - `cli` layer handles user input and parsing of commands.
 - `dbg` layer handles state management of `dbg_t` context.
-- `os` layer handles `ptrace` and system calls.
+- `os` layer handles `ptrace` and system and operatiny system calls.
 
 Data travels downwards through the layers to decouple them from responsibilities. This allows for cleaner and more maintainable style of the codebase.
 
-After issuing `run` command, the debugger uses `fork()` to spawn a child process. Child process calls `ptrace(PTRACE_TRACEME)` to allow the parent (debugger) process to trace its execution
+After issuing `run` command, the debugger uses `fork()` to spawn a child process. Child process calls `ptrace(PTRACE_TRACEME)` to allow the parent (debugger) process to trace its execution. Then the control flow is redirected to the parent where the user can send in debugger commands through a terminal interface integrated into the debugger.
+
+The architecture currently support only Linux operating systems. I am considering adding Windows OS support for the debugger in the future.
 
 # Features
 
@@ -65,7 +67,7 @@ The debugger supports basic commands
 
 # Roadmap
 
-- [ ] Improve the architecture to support stateless command handling
+- [x] Improve the architecture to support stateless command handling
 - [ ] `--help` flag
 - [ ] `b, bp, break, breakpoint <address/function_name>` - Sets a breakpoint on an address or a function
 - [ ] `c, continue` - Continues the control flow of the debugged process. If breakpoints are set it pauses on the first breakpoint hit stopping the execution of the program.
