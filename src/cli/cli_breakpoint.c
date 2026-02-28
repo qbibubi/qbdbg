@@ -43,11 +43,12 @@ static int parse_address(const char* str, unsigned long* out) {
 void cli_set_breakpoint(dbg_t* dbg, const user_input_t* input) {
     assert(dbg != NULL);
     assert(input != NULL);
+
     if (input->argc == 0) {
         return;
     }
 
-    for (int i = 0; i < input->argc; ++i) {
+    for (size_t i = 0; i < input->argc; ++i) {
         unsigned long address;
 
         if (parse_address(input->argv[i], &address) == -1) {

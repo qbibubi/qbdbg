@@ -19,7 +19,7 @@
 typedef struct user_input_t {
     const char* name;
     char** argv;
-    int argc;
+    size_t argc;
 } user_input_t;
 
 typedef struct {

@@ -7,8 +7,14 @@
 #include <stdio.h>
 #include <string.h>
 
-#define REGISTER_FMT "\t%-8s 0x%016lx\n" 
-#define REGISTER_ENTRY(name) { #name, offsetof(dbg_regs_t, name) }
+#define REGISTER_FMT            "\t%-8s 0x%016lx\n" 
+#define REGISTER_ENTRY(name)    { #name, offsetof(dbg_regs_t, name) }
+
+/**
+ * @TODO:
+ *      - [ ] Add other registers (fsbase, gsbase, etc.) 
+ *      - [ ] Add flag printing next to eflags (should it be rflags?)
+ */
 
 typedef struct {
     const char* name;
@@ -31,11 +37,14 @@ static const dbg_reg_t registers[] = {
     REGISTER_ENTRY(rdx),
     REGISTER_ENTRY(rsi),
     REGISTER_ENTRY(rdi),
+    REGISTER_ENTRY(orig_rax),
     REGISTER_ENTRY(rip),
-    REGISTER_ENTRY(rsp),
     REGISTER_ENTRY(cs),
     REGISTER_ENTRY(eflags),
+    REGISTER_ENTRY(rsp),
     REGISTER_ENTRY(ss),
+    REGISTER_ENTRY(gs_base),
+    REGISTER_ENTRY(fs_base),
     REGISTER_ENTRY(ds),
     REGISTER_ENTRY(es),
     REGISTER_ENTRY(fs),
@@ -68,7 +77,7 @@ void cli_get_regs(dbg_t* dbg, const user_input_t* input) {
         return;
     }
 
-    for (int i = 0; i < input->argc; ++i) {
+    for (size_t i = 0; i < input->argc; ++i) {
         const char* name = input->argv[i];
         if (!name) {
             continue;
@@ -76,15 +85,17 @@ void cli_get_regs(dbg_t* dbg, const user_input_t* input) {
 
         int found = 0;
 
-        for (unsigned long  j = 0; j < registers_size; ++j) {
-            if (strcmp(name, registers[j].name) == 0) {
-                const uint64_t value = *(uint64_t*)((uint8_t*)&regs + registers[j].offset);
-
-                fprintf(stdout, REGISTER_FMT, name, value);
-                found = 1;
-
-                break;
+        for (size_t j = 0; j < registers_size; ++j) {
+            if (strcmp(name, registers[j].name) != 0) {
+                continue;
             }
+
+            const uint64_t value = *(uint64_t*)((uint8_t*)&regs + registers[j].offset);
+
+            fprintf(stdout, REGISTER_FMT, name, value);
+            found = 1;
+
+            break;
         }
 
         if (!found) {
