@@ -9,7 +9,7 @@ static void regs_from_native(dbg_regs_t* out, const struct user_regs_struct* nat
 }
 
 static void regs_to_native(struct user_regs_struct* native, const dbg_regs_t* regs) {
-    memcpy(native, regs, sizeof(struct user_regs_struct));
+    memcpy(native, regs, sizeof(dbg_regs_t));
 }
 
 dbg_result_t dbg_get_regs(dbg_t* dbg, dbg_regs_t* out_regs) {

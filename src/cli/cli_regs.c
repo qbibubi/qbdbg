@@ -8,13 +8,8 @@
 #include <string.h>
 
 #define REGISTER_FMT            "\t%-8s 0x%016lx\n" 
+#define REGISTER_FLAGS_FMT      "\t%-8s 0x%016lx\t"
 #define REGISTER_ENTRY(name)    { #name, offsetof(dbg_regs_t, name) }
-
-/**
- * @TODO:
- *      - [ ] Add other registers (fsbase, gsbase, etc.) 
- *      - [ ] Add flag printing next to eflags (should it be rflags?)
- */
 
 typedef struct {
     const char* name;
@@ -51,6 +46,59 @@ static const dbg_reg_t registers[] = {
     REGISTER_ENTRY(gs),
 };
 
+typedef struct {
+    const char* name;
+    uint64_t    mask;
+} rflags_bit_t;
+
+static const rflags_bit_t rflags_bits[] = {
+    { "CF", 0x0001 },
+    { "PF", 0x0004 },
+    { "AF", 0x0010 },
+    { "ZF", 0x0040 },
+    { "SF", 0x0080 },
+    { "TF", 0x0100 },
+    { "IF", 0x0200 },
+    { "DF", 0x0400 },
+    { "OF", 0x0800 },
+};
+
+static void cli_print_rflags(uint64_t value) {
+    const size_t rflags_bits_size = sizeof(rflags_bits) / sizeof(rflags_bits[0]);
+    for (size_t i = 0; i < rflags_bits_size; ++i) {
+        if (value & rflags_bits[i].mask) {
+            fprintf(stdout, "%s ", rflags_bits[i].name); 
+        }
+    }
+}
+
+static void cli_print_reg(const char* name, uint64_t value) {
+    if (strcmp(name, "gs_base") == 0 || strcmp(name, "fs_base") == 0 || strcmp(name, "orig_rax") == 0) {
+        return;
+    }
+
+    if (strcmp(name, "gs") == 0 && value == 0) {
+        // value here has to be come `gs_base` register
+        fprintf(stdout, REGISTER_FMT, name, value);
+        return;
+    }
+    
+    if (strcmp(name, "fs") == 0 && value == 0) {
+        // value here has to be come `fs_base` register
+        fprintf(stdout, REGISTER_FMT, name, value);
+        return;
+    }
+
+    if (strcmp(name, "eflags") == 0) {
+        fprintf(stdout, REGISTER_FLAGS_FMT, name, value);
+        cli_print_rflags(value);
+        fprintf(stdout, "\n"); 
+        return;
+    }
+
+    fprintf(stdout, REGISTER_FMT, name, value);
+}
+
 void cli_get_regs(dbg_t* dbg, const user_input_t* input) {
     assert(dbg != NULL);
     assert(input != NULL);
@@ -64,14 +112,14 @@ void cli_get_regs(dbg_t* dbg, const user_input_t* input) {
         return;
     }
 
-    const unsigned long registers_size = sizeof(registers) / sizeof(registers[0]);
+    const size_t registers_size = sizeof(registers) / sizeof(registers[0]);
 
     if (input->argc == 0) {
-        for (unsigned long i = 0; i < registers_size; ++i) {
+        for (size_t i = 0; i < registers_size; ++i) {
             const char* name = registers[i].name;
             const uint64_t value = *(uint64_t*)((uint8_t*)&regs + registers[i].offset);
 
-            fprintf(stdout, REGISTER_FMT, name, value);
+            cli_print_reg(name, value);
         }
 
         return;
@@ -79,22 +127,15 @@ void cli_get_regs(dbg_t* dbg, const user_input_t* input) {
 
     for (size_t i = 0; i < input->argc; ++i) {
         const char* name = input->argv[i];
-        if (!name) {
-            continue;
-        }
 
         int found = 0;
 
         for (size_t j = 0; j < registers_size; ++j) {
-            if (strcmp(name, registers[j].name) != 0) {
-                continue;
-            }
-
             const uint64_t value = *(uint64_t*)((uint8_t*)&regs + registers[j].offset);
 
-            fprintf(stdout, REGISTER_FMT, name, value);
-            found = 1;
+            cli_print_reg(name, value);
 
+            found = 1;
             break;
         }
 
