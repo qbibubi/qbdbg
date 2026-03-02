@@ -78,7 +78,7 @@ static command_t commands[] = {
 NODISCARD static user_input_t parse_line(char *line) {
     assert(line != NULL);
 
-    int capacity = 4;
+    size_t capacity = 4;
 
     user_input_t input = { 0 };
     input.argv = malloc(capacity * sizeof(char*));
