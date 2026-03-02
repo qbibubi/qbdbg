@@ -1,11 +1,11 @@
 #include "cli_regs.h"
 
-#include "../dbg/dbg_regs.h"
-
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "../dbg/dbg_regs.h"
 
 #define REGISTER_FMT            "\t%-8s 0x%016lx\n" 
 #define REGISTER_FLAGS_FMT      "\t%-8s 0x%016lx\t"
@@ -153,11 +153,27 @@ void cli_set_regs(dbg_t* dbg, const user_input_t* input) {
     assert(dbg != NULL);
     assert(input != NULL);
 
-    if (input->argc == 0) {
+    if (input->argc == 0 || input->argc > 2) {
         return;
     }
 
     dbg_regs_t regs;
+    if (dbg_get_regs(dbg, &regs) != DBG_OK) {
+        return;
+    }
+    
+    const char* name = input->argv[0];
+    // This value has to be checked whether this is a proper address
+    const uint64_t value = strtoull(input->argv[1], NULL, 0); 
+
+    const size_t registers_size = sizeof(registers) / sizeof(registers[0]);
+    for (size_t i = 0; i < registers_size; ++i) {
+        if (strcmp(name, registers[i].name) != 0) {
+            continue;
+        }
+
+        *(uint64_t*)((uint8_t*)&regs + registers[i].offset) = value;
+    }
 
     const dbg_result_t result = dbg_set_regs(dbg, &regs); 
     const char* message = dbg_result_str(result);
