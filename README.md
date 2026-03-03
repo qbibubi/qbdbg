@@ -1,8 +1,8 @@
 > God bless I don't have to write LLDB myself...
 
-# qbdebug
+# qbdbg
 
-`qbdebug` is a simple Linux debugger written in C using `ptrace` API. The sole idea of this project is to create a CLI debugger as a way of learning about debuggers, processors, signals, memory, breakpoints and process introspection.
+`qbdbg` is a simple Linux debugger written in C using `ptrace` API. The sole idea of this project is to create a CLI debugger as a way of learning about debuggers, processors, signals, memory, breakpoints and process introspection.
 
 ## Architecture of the debugger
 
