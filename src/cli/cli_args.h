@@ -6,7 +6,7 @@
 /**
  * @brief Parses arguments provided for the debugger and 
  *
- *  To distinguish between debugger and debugee arguments passed through command line arguments a `--` separator is used. 
+ *  To distinguish between debugger and debugee arguments passed through command line a `--` separator is used. 
  *  All arguments provided after this operator are debugees flags and arguments. By setting `target_argv` to next argument
  *  after the separator.
  *
