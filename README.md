@@ -30,8 +30,8 @@ The architecture currently support only Linux operating systems. I am considerin
 
 - Linux (requires `sys/ptrace.h` and ELF binaries)
 - GDB `readline`
-- `gcc` or `clang` compiler
-- `cmake` (3.13+)
+- `clang` compiler
+- `cmake` (3.20+)
 
 # Build
 
