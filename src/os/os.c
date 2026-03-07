@@ -2,6 +2,8 @@
 
 #include <errno.h>
 #include <assert.h>
+#include <stdlib.h>
+#include <sys/wait.h>
 
 os_result_t os_traceme(void) {
     if (ptrace(PTRACE_TRACEME, 0, NULL, NULL) < 0) {
@@ -33,16 +35,9 @@ os_result_t os_detach(const pid_t pid) {
 }
 
 os_result_t os_wait(const pid_t pid, int *out_status) {
-    if (waitpid(pid, out_status, 0) < 0) {
+    const pid_t result = waitpid(pid, out_status, WUNTRACED | WCONTINUED);
+    if (result == -1) {
         return OS_ERR_WAIT;
-    }
-
-    return OS_OK;
-}
-
-os_result_t os_continue(const pid_t pid, int signal) {
-    if (ptrace(PTRACE_CONT, pid, NULL, (void*)(long)signal) == -1) {
-        return OS_ERR_CONTINUE;
     }
 
     return OS_OK;
