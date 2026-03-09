@@ -9,8 +9,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "../arch.h"
-
 #define MAX_BREAKPOINTS 128
 #define INTERRUPT_BYTE  0xCC
 
