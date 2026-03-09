@@ -5,7 +5,7 @@
 
 #include "dbg.h"
 
-NODISCARD dbg_result_t dbg_get_regs(dbg_t* dbg, dbg_regs_t*  out_regs);
-NODISCARD dbg_result_t dbg_set_regs(dbg_t* dbg, dbg_regs_t* regs);
+dbg_result_t dbg_get_regs(dbg_t* dbg, dbg_regs_t*  out_regs);
+dbg_result_t dbg_set_regs(dbg_t* dbg, dbg_regs_t* regs);
 
 #endif // DBG_REGS_H

@@ -92,10 +92,10 @@ typedef struct dbg_t {
     int stepping_over_bp;
 } dbg_t;
 
-NODISCARD dbg_result_t dbg_init(dbg_t* dbg);
-NODISCARD dbg_result_t dbg_quit(dbg_t* dbg);
-NODISCARD dbg_result_t dbg_launch(dbg_t* dbg, char** argv);
-NODISCARD dbg_result_t dbg_wait(dbg_t* dbg, const pid_t pid);
-NODISCARD const char* dbg_result_str(dbg_result_t result);
+dbg_result_t dbg_init(dbg_t* dbg);
+dbg_result_t dbg_quit(dbg_t* dbg);
+dbg_result_t dbg_launch(dbg_t* dbg, char** argv);
+dbg_result_t dbg_wait(dbg_t* dbg, const pid_t pid);
+const char* dbg_result_str(dbg_result_t result);
 
 #endif // DBG_H

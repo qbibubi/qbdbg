@@ -15,7 +15,6 @@
 #include "../dbg/dbg_regs.h"
 #include "../dbg/dbg_step.h"
 
-
 static void cli_launch(dbg_t* dbg, const user_input_t* input) {
     assert(dbg != NULL);
     assert(input != NULL);
@@ -75,7 +74,7 @@ static command_t commands[] = {
     { "rs", cli_set_regs }
 };
 
-NODISCARD static user_input_t parse_line(char *line) {
+static user_input_t parse_line(char *line) {
     assert(line != NULL);
 
     size_t capacity = 4;

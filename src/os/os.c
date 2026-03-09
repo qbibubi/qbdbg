@@ -43,6 +43,14 @@ os_result_t os_wait(const pid_t pid, int *out_status) {
     return OS_OK;
 }
 
+os_result_t os_continue(const pid_t pid, const int signal){
+    if (ptrace(PTRACE_CONT, pid, NULL, (void*)(long)signal) == -1) {
+        return OS_ERR_CONTINUE; 
+    }
+
+    return OS_OK;
+}
+
 os_result_t os_single_step(const pid_t pid) {
     if (ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL) == -1) {
         return OS_ERR_SINGLE_STEP;
